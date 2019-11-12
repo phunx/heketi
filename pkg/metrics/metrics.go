@@ -49,6 +49,42 @@ var (
 		[]string{"cluster"},
 	)
 
+	volumeSize = promDesc(
+		"volume_size",
+		"Total size of the volume",
+		[]string{"cluster", "device", "volume"},
+	)
+
+	volumeFree = promDesc(
+		"volume_free",
+		"Amount of Free space available on the volume",
+		[]string{"cluster", "device", "volume"},
+	)
+
+	volumeReserved = promDesc(
+		"volume_reserved",
+		"Amount of space used on the volume",
+		[]string{"cluster", "device", "volume"},
+	)
+
+	volumeSizeInBytes = promDesc(
+		"volume_size_bytes",
+		"Total size of the volume in bytes",
+		[]string{"cluster", "device", "volume"},
+	)
+
+	volumeFreeInBytes = promDesc(
+		"volume_free_bytes",
+		"Amount of Free space available on the volume in bytes",
+		[]string{"cluster", "device", "volume"},
+	)
+
+	volumeReservedInBytes = promDesc(
+		"volume_reserved_bytes",
+		"Amount of space used on the volume in bytes",
+		[]string{"cluster", "device", "volume"},
+	)
+
 	blockVolumesCount = promDesc(
 		"block_volumes_count",
 		"Number of block volumes on cluster",
@@ -155,6 +191,12 @@ func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
 	ch <- volumesCount
 	ch <- blockVolumesCount
 	ch <- nodesCount
+	ch <- volumeSize
+	ch <- volumeFree
+	ch <- volumeReserved
+	ch <- volumeSizeInBytes
+	ch <- volumeFreeInBytes
+	ch <- volumeReservedInBytes
 	ch <- deviceCount
 	ch <- deviceSize
 	ch <- deviceFree
@@ -246,6 +288,7 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 			float64(len(cluster.Nodes)),
 			cluster.Id,
 		)
+
 		for _, node := range cluster.Nodes {
 			ch <- prometheus.MustNewConstMetric(
 				deviceCount,
@@ -311,6 +354,58 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 					device.Name,
 				)
 			}
+		}
+
+		for _, volume := range cluster.Volumes {
+			ch <- prometheus.MustNewConstMetric(
+				volumeSize,
+				prometheus.GaugeValue,
+				float64(volume.Size),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				volumeFree,
+				prometheus.GaugeValue,
+				float64(volume.BlockInfo.FreeSize),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				volumeReserved,
+				prometheus.GaugeValue,
+				float64(volume.BlockInfo.ReservedSize),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
+
+			ch <- prometheus.MustNewConstMetric(
+				volumeSizeInBytes,
+				prometheus.GaugeValue,
+				float64(uint64(volume.Size)*KB*KB),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				volumeFreeInBytes,
+				prometheus.GaugeValue,
+				float64(volume.BlockInfo.FreeSize),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				volumeReservedInBytes,
+				prometheus.GaugeValue,
+				float64(volume.BlockInfo.ReservedSize),
+				cluster.Id,
+				volume.Mount.GlusterFS.MountPoint,
+				volume.Name,
+			)
 		}
 	}
 }

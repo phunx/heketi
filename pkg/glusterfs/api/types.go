@@ -328,17 +328,21 @@ func (br BlockRestriction) String() string {
 	}
 }
 
+type GlusterFSMountInfo struct {
+	Hosts      []string          `json:"hosts"`
+	MountPoint string            `json:"device"`
+	Options    map[string]string `json:"options"`
+}
+
+type VolumeMountInfo struct {
+	GlusterFS GlusterFSMountInfo `json:"glusterfs"`
+}
+
 type VolumeInfo struct {
 	VolumeCreateRequest
-	Id      string `json:"id"`
-	Cluster string `json:"cluster"`
-	Mount   struct {
-		GlusterFS struct {
-			Hosts      []string          `json:"hosts"`
-			MountPoint string            `json:"device"`
-			Options    map[string]string `json:"options"`
-		} `json:"glusterfs"`
-	} `json:"mount"`
+	Id        string          `json:"id"`
+	Cluster   string          `json:"cluster"`
+	Mount     VolumeMountInfo `json:"mount"`
 	BlockInfo struct {
 		FreeSize     int              `json:"freesize,omitempty"`
 		ReservedSize int              `json:"reservedsize,omitempty"`

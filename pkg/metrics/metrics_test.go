@@ -71,6 +71,30 @@ func TestMetricsEndpoint(t *testing.T) {
 							},
 						},
 					},
+					Volumes: []api.VolumeInfoResponse{
+						{
+							VolumeInfo: api.VolumeInfo{
+								VolumeCreateRequest: api.VolumeCreateRequest{
+									Size:     5,
+									Clusters: []string{"c1"},
+									Name:     "v1",
+									Durability: api.VolumeDurabilityInfo{
+										Type:      api.DurabilityReplicate,
+										Replicate: api.ReplicaDurability{Replica: 2},
+									},
+								},
+								Id:      "v1",
+								Cluster: "c1",
+								Mount: api.VolumeMountInfo{
+									GlusterFS: api.GlusterFSMountInfo{
+										Hosts:      []string{"n1"},
+										MountPoint: "d1",
+										Options:    make(map[string]string),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -104,6 +128,11 @@ func TestMetricsEndpoint(t *testing.T) {
 	match, err = regexp.Match("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\"} 2", body)
 	if !match || err != nil {
 		t.Fatal("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\"} 2 should be present in the metrics output")
+	}
+
+	match, err = regexp.Match("heketi_volume_size{cluster=\"c1\",device=\"d1\",volume=\"v1\"} 5", body)
+	if !match || err != nil {
+		t.Fatal("heketi_volume_size{cluster=\"c1\",device=\"d1\",volume=\"v1\"} 5 should be present in the metrics output")
 	}
 
 	match, err = regexp.Match("operations_total_count 7", body)
