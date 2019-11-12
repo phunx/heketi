@@ -28,6 +28,8 @@ const (
 
 const (
 	KB uint64 = 1024
+	MB uint64 = 1024 * KB
+	GB uint64 = 1024 * MB
 )
 
 var (
@@ -137,6 +139,18 @@ var (
 		"device_used_bytes",
 		"Amount of space used on the device in bytes",
 		[]string{"cluster", "hostname", "device"},
+	)
+
+	brickSize = promDesc(
+		"brick_size",
+		"Total size of the brick",
+		[]string{"cluster", "hostname", "device", "volume", "brick", "path"},
+	)
+
+	brickSizeInBytes = promDesc(
+		"brick_size_bytes",
+		"Total size of the brick in bytes",
+		[]string{"cluster", "hostname", "device", "volume", "brick", "path"},
 	)
 
 	brickCount = promDesc(
@@ -385,7 +399,7 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(
 				volumeSizeInBytes,
 				prometheus.GaugeValue,
-				float64(uint64(volume.Size)*KB*KB),
+				float64(uint64(volume.Size)*GB),
 				cluster.Id,
 				volume.Mount.GlusterFS.MountPoint,
 				volume.Name,
@@ -406,6 +420,30 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 				volume.Mount.GlusterFS.MountPoint,
 				volume.Name,
 			)
+			for _, brick := range volume.Bricks {
+				ch <- prometheus.MustNewConstMetric(
+					brickSize,
+					prometheus.GaugeValue,
+					float64(brick.Size),
+					cluster.Id,
+					brick.NodeId,
+					brick.DeviceId,
+					brick.VolumeId,
+					brick.Id,
+					brick.Path,
+				)
+				ch <- prometheus.MustNewConstMetric(
+					brickSizeInBytes,
+					prometheus.GaugeValue,
+					float64(brick.Size*KB),
+					cluster.Id,
+					brick.NodeId,
+					brick.DeviceId,
+					brick.VolumeId,
+					brick.Id,
+					brick.Path,
+				)
+			}
 		}
 	}
 }
