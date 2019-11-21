@@ -131,9 +131,9 @@ func TestMetricsEndpoint(t *testing.T) {
 		t.Fatal("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\"} 2 should be present in the metrics output")
 	}
 
-	match, err = regexp.Match("heketi_volume_size{cluster=\"c1\",device=\"d1\",volume=\"v1\"} 5", body)
+	match, err = regexp.Match("heketi_volume_size{cluster=\"c1\",hostname=\"n1\",volume=\"v1\"} 5", body)
 	if !match || err != nil {
-		t.Fatal("heketi_volume_size{cluster=\"c1\",device=\"d1\",volume=\"v1\"} 5 should be present in the metrics output")
+		t.Fatal("heketi_volume_size{cluster=\"c1\",hostname=\"n1\",volume=\"v1\"} 5 should be present in the metrics output")
 	}
 
 	match, err = regexp.Match("operations_total_count 7", body)
