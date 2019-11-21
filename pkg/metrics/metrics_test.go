@@ -60,6 +60,7 @@ func TestMetricsEndpoint(t *testing.T) {
 											Free:  1,
 											Used:  1,
 										},
+										PvUUID: "pv1",
 									},
 									Bricks: []api.BrickInfo{
 										{
@@ -125,7 +126,7 @@ func TestMetricsEndpoint(t *testing.T) {
 		t.Fatal("heketi_nodes_count{cluster=\"c1\"} 1 should be present in the metrics output")
 	}
 
-	match, err = regexp.Match("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\"} 2", body)
+	match, err = regexp.Match("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\",pv_uuid=\"pv1\"} 2", body)
 	if !match || err != nil {
 		t.Fatal("heketi_device_size{cluster=\"c1\",device=\"d1\",hostname=\"n1\"} 2 should be present in the metrics output")
 	}
