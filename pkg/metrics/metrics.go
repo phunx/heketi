@@ -10,8 +10,6 @@
 package metrics
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -30,8 +28,6 @@ const (
 
 const (
 	KB uint64 = 1024
-	MB uint64 = 1024 * KB
-	GB uint64 = 1024 * MB
 )
 
 var (
@@ -51,42 +47,6 @@ var (
 		"volumes_count",
 		"Number of volumes on cluster",
 		[]string{"cluster"},
-	)
-
-	volumeSize = promDesc(
-		"volume_size",
-		"Total size of the volume",
-		[]string{"cluster", "hostname", "volume"},
-	)
-
-	volumeFree = promDesc(
-		"volume_free",
-		"Amount of Free space available on the volume",
-		[]string{"cluster", "hostname", "volume"},
-	)
-
-	volumeReserved = promDesc(
-		"volume_reserved",
-		"Amount of space used on the volume",
-		[]string{"cluster", "hostname", "volume"},
-	)
-
-	volumeSizeInBytes = promDesc(
-		"volume_size_bytes",
-		"Total size of the volume in bytes",
-		[]string{"cluster", "hostname", "volume"},
-	)
-
-	volumeFreeInBytes = promDesc(
-		"volume_free_bytes",
-		"Amount of Free space available on the volume in bytes",
-		[]string{"cluster", "hostname", "volume"},
-	)
-
-	volumeReservedInBytes = promDesc(
-		"volume_reserved_bytes",
-		"Amount of space used on the volume in bytes",
-		[]string{"cluster", "hostname", "volume"},
 	)
 
 	blockVolumesCount = promDesc(
@@ -143,22 +103,10 @@ var (
 		[]string{"cluster", "manage", "storage", "id", "device", "pv_uuid"},
 	)
 
-	brickSize = promDesc(
-		"brick_size",
-		"Total size of the brick",
-		[]string{"cluster", "hostname", "device", "volume", "brick", "path"},
-	)
-
-	brickSizeInBytes = promDesc(
-		"brick_size_bytes",
-		"Total size of the brick in bytes",
-		[]string{"cluster", "hostname", "device", "volume", "brick", "path"},
-	)
-
 	brickCount = promDesc(
 		"device_brick_count",
 		"Number of bricks on device",
-		[]string{"cluster", "hostname", "device", "volume", "brick", "path"},
+		[]string{"cluster", "manage", "storage", "id", "device", "pv_uuid"},
 	)
 
 	staleCount = promDesc(
@@ -207,12 +155,6 @@ func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
 	ch <- volumesCount
 	ch <- blockVolumesCount
 	ch <- nodesCount
-	ch <- volumeSize
-	ch <- volumeFree
-	ch <- volumeReserved
-	ch <- volumeSizeInBytes
-	ch <- volumeFreeInBytes
-	ch <- volumeReservedInBytes
 	ch <- deviceCount
 	ch <- deviceSize
 	ch <- deviceFree
@@ -220,8 +162,6 @@ func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
 	ch <- deviceSizeInBytes
 	ch <- deviceFreeInBytes
 	ch <- deviceUsedInBytes
-	ch <- brickSize
-	ch <- brickSizeInBytes
 	ch <- brickCount
 	/* following metrics are grabbed from operations list, gives number of stale|failed|new|total|inFlight operations */
 	ch <- staleCount
@@ -261,27 +201,27 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 	} else {
 		ch <- prometheus.MustNewConstMetric(
 			staleCount,
-			prometheus.CounterValue,
+			prometheus.GaugeValue,
 			float64(opinfo.Stale))
 
 		ch <- prometheus.MustNewConstMetric(
 			failedCount,
-			prometheus.CounterValue,
+			prometheus.GaugeValue,
 			float64(opinfo.Failed))
 
 		ch <- prometheus.MustNewConstMetric(
 			newCount,
-			prometheus.CounterValue,
+			prometheus.GaugeValue,
 			float64(opinfo.New))
 
 		ch <- prometheus.MustNewConstMetric(
 			totalCount,
-			prometheus.CounterValue,
+			prometheus.GaugeValue,
 			float64(opinfo.Total))
 
 		ch <- prometheus.MustNewConstMetric(
 			inFlightCount,
-			prometheus.CounterValue,
+			prometheus.GaugeValue,
 			float64(opinfo.InFlight))
 	}
 
@@ -308,8 +248,6 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 		)
 
 		for _, node := range cluster.Nodes {
-			dump, _ := json.Marshal(node)
-			fmt.Println(string(dump))
 			ch <- prometheus.MustNewConstMetric(
 				deviceCount,
 				prometheus.GaugeValue,
@@ -394,41 +332,6 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 					device.Id,
 					device.Name,
 					device.PvUUID,
-				)
-			}
-		}
-
-		for _, volume := range cluster.Volumes {
-			ch <- prometheus.MustNewConstMetric(
-				volumeSize,
-				prometheus.GaugeValue,
-				float64(volume.Size),
-				cluster.Id,
-				volume.Mount.GlusterFS.Hosts[0],
-				volume.Name,
-			)
-			for _, brick := range volume.Bricks {
-				ch <- prometheus.MustNewConstMetric(
-					brickSize,
-					prometheus.GaugeValue,
-					float64(brick.Size),
-					cluster.Id,
-					brick.NodeId,
-					brick.DeviceId,
-					brick.VolumeId,
-					brick.Id,
-					brick.Path,
-				)
-				ch <- prometheus.MustNewConstMetric(
-					brickSizeInBytes,
-					prometheus.GaugeValue,
-					float64(brick.Size*KB),
-					cluster.Id,
-					brick.NodeId,
-					brick.DeviceId,
-					brick.VolumeId,
-					brick.Id,
-					brick.Path,
 				)
 			}
 		}

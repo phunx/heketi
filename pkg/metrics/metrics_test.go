@@ -50,7 +50,9 @@ func TestMetricsEndpoint(t *testing.T) {
 					Id: "c1",
 					Nodes: []api.NodeInfoResponse{
 						{
-							NodeInfo: api.NodeInfo{NodeAddRequest: api.NodeAddRequest{Hostnames: api.HostAddresses{Manage: []string{"n1"}, Storage: []string{"n1"}}}},
+							NodeInfo: api.NodeInfo{NodeAddRequest: api.NodeAddRequest{
+                Hostnames: api.HostAddresses{Manage: []string{"n1"}, Storage: []string{"n1"}},
+              }},
 							DevicesInfo: []api.DeviceInfoResponse{
 								{
 									DeviceInfo: api.DeviceInfo{
@@ -68,30 +70,6 @@ func TestMetricsEndpoint(t *testing.T) {
 											Id:   "b1",
 											Size: 2,
 										},
-									},
-								},
-							},
-						},
-					},
-					Volumes: []api.VolumeInfoResponse{
-						{
-							VolumeInfo: api.VolumeInfo{
-								VolumeCreateRequest: api.VolumeCreateRequest{
-									Size:     5,
-									Clusters: []string{"c1"},
-									Name:     "v1",
-									Durability: api.VolumeDurabilityInfo{
-										Type:      api.DurabilityReplicate,
-										Replicate: api.ReplicaDurability{Replica: 2},
-									},
-								},
-								Id:      "v1",
-								Cluster: "c1",
-								Mount: api.VolumeMountInfo{
-									GlusterFS: api.GlusterFSMountInfo{
-										Hosts:      []string{"n1"},
-										MountPoint: "d1",
-										Options:    make(map[string]string),
 									},
 								},
 							},
@@ -130,11 +108,6 @@ func TestMetricsEndpoint(t *testing.T) {
 	match, err = regexp.Match("heketi_device_size{cluster=\"c1\",device=\"d1\",id=\"id1\",manage=\"n1\",pv_uuid=\"pv1\",storage=\"n1\"} 2", body)
 	if !match || err != nil {
 		t.Fatal("heketi_device_size{cluster=\"c1\",device=\"d1\",id=\"id1\",manage=\"n1\",pv_uuid=\"pv1\",storage=\"n1\"} 2 should be present in the metrics output")
-	}
-
-	match, err = regexp.Match("heketi_volume_size{cluster=\"c1\",hostname=\"n1\",volume=\"v1\"} 5", body)
-	if !match || err != nil {
-		t.Fatal("heketi_volume_size{cluster=\"c1\",hostname=\"n1\",volume=\"v1\"} 5 should be present in the metrics output")
 	}
 
 	match, err = regexp.Match("operations_total_count 7", body)
